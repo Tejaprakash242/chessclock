@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Clock</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .clock {
+            width: 100%;
+            padding: 20px;
+            margin: 10px 0;
+            font-size: 2.5em;
+            text-align: center;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+        .player1 {
+            background-color: #2c3e50;
+        }
+        .player2 {
+            background-color: #c0392b;
+        }
+        .active {
+            border: 3px solid #27ae60;
+            transform: scale(1.05);
+        }
+        .inactive {
+            opacity: 0.6;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        @media (max-width: 600px) {
+            .clock {
+                font-size: 9em;
+                padding: 15px;
+                height:300px;
+            }
+            button {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="player1" class="clock player1 inactive">10:00</div>
+    <div id="player2" class="clock player2 inactive">10:00</div>
+    <div class="controls">
+        <button id="startPause">Start</button>
+        <button id="reset">Reset</button>
+    </div>
+</div>
+<script>
+    const player1Clock = document.getElementById('player1');
+    const player2Clock = document.getElementById('player2');
+    const startPauseBtn = document.getElementById('startPause');
+    const resetBtn = document.getElementById('reset');
+
+    let player1Time = 905; // 10 minutes in seconds
+    let player2Time = 905;
+    let activePlayer = null;
+    let isRunning = false;
+    let interval = null;
+
+    function formatTime(seconds) {
+        const min = Math.floor(seconds / 60);
+        const sec = seconds % 60;
+        return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    function updateDisplay() {
+        player1Clock.textContent = formatTime(player1Time);
+        player2Clock.textContent = formatTime(player2Time);
+    }
+
+    function startTimer() {
+        if (!isRunning) {
+            isRunning = true;
+            startPauseBtn.textContent = 'Pause';
+            if (activePlayer === null) {
+                activePlayer = 1;
+                player1Clock.classList.remove('inactive');
+                player1Clock.classList.add('active');
+                player2Clock.classList.add('inactive');
+            }
+            interval = setInterval(() => {
+                if (activePlayer === 1) {
+                    player1Time--;
+                    if (player1Time <= 0) {
+                        player1Time = 0;
+                        clearInterval(interval);
+                        isRunning = false;
+                        startPauseBtn.textContent = 'Start';
+                        startPauseBtn.disabled = true;
+                        alert('Player 1 time is up!');
+                    }
+                } else if (activePlayer === 2) {
+                    player2Time--;
+                    if (player2Time <= 0) {
+                        player2Time = 0;
+                        clearInterval(interval);
+                        isRunning = false;
+                        startPauseBtn.textContent = 'Start';
+                        startPauseBtn.disabled = true;
+                        alert('Player 2 time is up!');
+                    }
+                }
+                updateDisplay();
+            }, 1000);
+        }
+    }
+
+    function pauseTimer() {
+        if (isRunning) {
+            clearInterval(interval);
+            isRunning = false;
+            startPauseBtn.textContent = 'Start';
+        }
+    }
+
+    function resetTimer() {
+        clearInterval(interval);
+        isRunning = false;
+        activePlayer = null;
+        player1Time = 900;
+        player2Time = 900;
+        player1Clock.classList.remove('active');
+        player2Clock.classList.remove('active');
+        player1Clock.classList.add('inactive');
+        player2Clock.classList.add('inactive');
+        startPauseBtn.textContent = 'Start';
+        startPauseBtn.disabled = false;
+        updateDisplay();
+    }
+
+    function switchPlayer(player) {
+        if (isRunning && activePlayer !== player) {
+            if (player === 1) {
+                activePlayer = 1;
+                player1Clock.classList.remove('inactive');
+                player1Clock.classList.add('active');
+                player2Clock.classList.remove('active');
+                player2Clock.classList.add('inactive');
+            } else {
+                activePlayer = 2;
+                player2Clock.classList.remove('inactive');
+                player2Clock.classList.add('active');
+                player1Clock.classList.remove('active');
+                player1Clock.classList.add('inactive');
+            }
+        }
+    }
+
+    player1Clock.addEventListener('click', () => {
+        if (player1Time > 0 && player2Time > 0) {
+            switchPlayer(1);
+            if (!isRunning) startTimer();
+        }
+    });
+
+    player2Clock.addEventListener('click', () => {
+        if (player1Time > 0 && player2Time > 0) {
+            switchPlayer(2);
+            if (!isRunning) startTimer();
+        }
+    });
+
+    startPauseBtn.addEventListener('click', () => {
+        if (isRunning) {
+            pauseTimer();
+        } else {
+            startTimer();
+        }
+    });
+
+    resetBtn.addEventListener('click', resetTimer);
+
+    updateDisplay();
+</script>
+</body>
+</html>
